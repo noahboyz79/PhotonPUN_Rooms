@@ -1,4 +1,4 @@
-// example by me of what a Player Controller set up properly woud look like, use it if you want but credit is appreciated
+// example by me of what a Player Controller set up properly woud look like, use it if you want but credit is appreciated.
 
 using Photon.Pun;
 using UnityEngine;
