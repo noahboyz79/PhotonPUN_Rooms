@@ -1,0 +1,91 @@
+// example by me of what a Player Controller set up properly woud look like, use it if you want but credit is appreciated
+
+using Photon.Pun;
+using UnityEngine;
+
+[RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(PhotonView))]
+public class PlayerController : MonoBehaviourPun
+{
+    [SerializeField] private Transform cameraTransform;
+    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float jumpHeight = 1.5f;
+    [SerializeField] private float gravity = -20f;
+    [SerializeField] private float mouseSensitivity = 0.1f;
+    [SerializeField] private float maxLookAngle = 85f;
+
+    private CharacterController controller;
+    private InputSystem_Actions inputActions;
+    private Vector3 velocity;
+    private float verticalLookRotation;
+
+    private void Awake()
+    {
+        controller = GetComponent<CharacterController>();
+        inputActions = new InputSystem_Actions();
+    }
+
+    private void OnEnable()
+    {
+        if (photonView.IsMine)
+            inputActions.Player.Enable();
+    }
+
+    private void OnDisable()
+    {
+        inputActions.Player.Disable();
+    }
+
+    private void Start()
+    {
+        if (!photonView.IsMine)
+        {
+            if (cameraTransform != null)
+                cameraTransform.gameObject.SetActive(false);
+
+            return;
+        }
+
+        Cursor.lockState = CursorLockMode.Locked;
+    }
+
+    private void Update()
+    {
+        if (!photonView.IsMine)
+            return;
+
+        HandleLook();
+        HandleMovement();
+    }
+
+    private void HandleLook()
+    {
+        Vector2 lookInput = inputActions.Player.Look.ReadValue<Vector2>();
+
+        transform.Rotate(Vector3.up * lookInput.x * mouseSensitivity);
+
+        verticalLookRotation -= lookInput.y * mouseSensitivity;
+        verticalLookRotation = Mathf.Clamp(verticalLookRotation, -maxLookAngle, maxLookAngle);
+        cameraTransform.localRotation = Quaternion.Euler(verticalLookRotation, 0f, 0f);
+    }
+
+    private void HandleMovement()
+    {
+        Vector2 moveInput = inputActions.Player.Move.ReadValue<Vector2>();
+        Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
+
+        if (controller.isGrounded)
+        {
+            if (velocity.y < 0f)
+                velocity.y = -2f;
+
+            if (inputActions.Player.Jump.WasPressedThisFrame())
+                velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
+
+        velocity.y += gravity * Time.deltaTime;
+
+        controller.Move(move * moveSpeed * Time.deltaTime);
+        controller.Move(velocity * Time.deltaTime);
+    }
+}
