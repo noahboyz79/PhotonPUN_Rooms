@@ -48,3 +48,6 @@ public class YourPlayerController : MonoBehaviourPun' above your class
 }' 
 - At vert top of Update() before your logic add 'if (!photonView.IsMine)
     return;'
+
+
+if anything doesn't make sense or is broking please reach out or feel free to push a fix!
